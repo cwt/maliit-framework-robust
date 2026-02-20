@@ -90,16 +90,28 @@ void WindowGroup::setupWindow(QWindow *window, Maliit::Position position)
 
 void WindowGroup::setScreenRegion(const QRegion &region, QWindow *window)
 {
-    if (window == 0 && m_window_list.size() > 0) {
+    if (!window && !m_window_list.isEmpty()) {
         window = m_window_list.at(0).m_window.data();
+        if (!window) {
+            qCWarning(lcMaliitFw) << Q_FUNC_INFO << "No valid window available";
+            return;
+        }
+    }
+    if (!window) {
+        qCWarning(lcMaliitFw) << Q_FUNC_INFO << "No window to set region on";
+        return;
     }
     m_platform->setInputRegion(window, region);
 }
 
 void WindowGroup::setInputMethodArea(const QRegion &region, QWindow *window)
 {
-    if (window == 0 && m_window_list.size() > 0) {
+    if (!window && !m_window_list.isEmpty()) {
         window = m_window_list.at(0).m_window.data();
+    }
+    if (!window) {
+        qCWarning(lcMaliitFw) << Q_FUNC_INFO << "No window to set input method area";
+        return;
     }
 
     for (int i = 0; i < m_window_list.size(); ++i) {
