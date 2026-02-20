@@ -20,11 +20,19 @@
 #include <QByteArray>
 #include <QVariant>
 #include <QDebug>
+#include <QMutexLocker>
 
 typedef MImSettingsQSettingsBackendFactory MImSettingsDefaultPersistentBackendFactory;
 
 QScopedPointer<MImSettingsBackendFactory> MImSettings::factory;
 MImSettings::SettingsType MImSettings::preferredSettingsType = MImSettings::InvalidSettings;
+
+// Mutex for thread-safe factory initialization
+static QMutex &factoryMutex()
+{
+    static QMutex mutex;
+    return mutex;
+}
 
 MImSettingsBackend::MImSettingsBackend(QObject *parent) :
     QObject(parent)
@@ -81,8 +89,10 @@ QList<QString> MImSettings::listEntries() const
 MImSettings::MImSettings(const QString &key, QObject *parent)
     : QObject(parent)
 {
+    // Thread-safe factory initialization
+    QMutexLocker locker(&factoryMutex());
     if (!factory) {
-        MImSettingsBackendFactory *newFactory = 0;
+        MImSettingsBackendFactory *newFactory = nullptr;
         switch (preferredSettingsType) {
 
         case TemporarySettings:
@@ -118,12 +128,14 @@ MImSettings::~MImSettings()
 
 void MImSettings::setPreferredSettingsType(SettingsType setting)
 {
+    QMutexLocker locker(&factoryMutex());
     preferredSettingsType = setting;
     factory.reset();
 }
 
 void MImSettings::setImplementationFactory(MImSettingsBackendFactory *newFactory)
 {
+    // Called from constructor while already holding factoryMutex
     factory.reset(newFactory);
 }
 
