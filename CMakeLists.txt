@@ -535,6 +535,7 @@ if(enable-tests)
     create_test(ut_mimsettings)
     create_test(ut_minputmethodquickplugin)
     create_test(ut_mkeyoverride)
+    create_test(ut_waylandinputmethodvalidation)
     create_test(ft_exampleplugin)
     create_test(ft_mimpluginmanager test-stubs ${DUMMY_PLUGINS})
 

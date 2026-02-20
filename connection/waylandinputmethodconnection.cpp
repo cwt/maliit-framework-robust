@@ -23,6 +23,7 @@
 #include <xkbcommon/xkbcommon.h>
 
 #include "waylandinputmethodconnection.h"
+#include "waylandinputmethodvalidation_p.h"
 
 Q_LOGGING_CATEGORY(lcWaylandConnection, "maliit.connection.wayland")
 
@@ -596,16 +597,22 @@ void InputMethodContext::zwp_input_method_context_v1_surrounding_text(const QStr
 
     const QByteArray &utf8_text(text.toUtf8());
 
+    // Validate and sanitize cursor/anchor positions from Wayland protocol
+    const SurroundingTextValidation validation = validateSurroundingTextPositions(utf8_text, cursor, anchor);
+    if (!validation.valid) {
+        return;
+    }
+
     m_stateInfo[SurroundingTextAttribute] = text;
-    m_stateInfo[CursorPositionAttribute] = QString::fromUtf8(utf8_text.constData(), cursor).size();
-    m_stateInfo[AnchorPositionAttribute] = QString::fromUtf8(utf8_text.constData(), anchor).size();
-    if (cursor == anchor) {
+    m_stateInfo[CursorPositionAttribute] = QString::fromUtf8(utf8_text.constData(), validation.cursor).size();
+    m_stateInfo[AnchorPositionAttribute] = QString::fromUtf8(utf8_text.constData(), validation.anchor).size();
+    if (validation.cursor == validation.anchor) {
         m_stateInfo[HasSelectionAttribute] = false;
         m_selection.clear();
     } else {
         m_stateInfo[HasSelectionAttribute] = true;
-        uint32_t begin = qMin(anchor, cursor);
-        uint32_t end = qMax(anchor, cursor);
+        uint32_t begin = qMin(validation.anchor, validation.cursor);
+        uint32_t end = qMax(validation.anchor, validation.cursor);
         m_selection = QString::fromUtf8(utf8_text.constData() + begin, end - begin);
     }
 }
