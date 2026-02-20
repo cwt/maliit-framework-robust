@@ -284,7 +284,7 @@ add_definitions(-DMALIIT_FRAMEWORK_USE_INTERNAL_API
                 -DMALIIT_DEFAULT_PLUGIN="libmaliit-keyboard-plugin.so"
                 -DMALIIT_DEFAULT_SUBVIEW="")
 
-add_executable(maliit-server passthroughserver/main.cpp)
+add_executable(maliit-server passthroughserver/main.cpp src/platformdetection.cpp)
 target_link_libraries(maliit-server maliit-plugins maliit-connection)
 
 if(enable-qt5-inputcontext)

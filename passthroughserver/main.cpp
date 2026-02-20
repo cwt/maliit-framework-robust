@@ -28,6 +28,8 @@
 #include <QGuiApplication>
 #include <QtDebug>
 
+#include "platformdetection.h"
+
 namespace {
 QLoggingCategory::CategoryFilter defaultLoggingFilter;
 
@@ -74,6 +76,15 @@ int main(int argc, char **argv)
     // none is a special value for QT_IM_MODULE, which disables loading of any
     // input method module in Qt 5.
     setenv("QT_IM_MODULE", "none", true);
+
+    // Detect and set the available platform before creating QGuiApplication.
+    // This prevents crashes when Wayland is requested but not available,
+    // by falling back to X11 (xcb) automatically.
+    const QString availablePlatform = detectAvailablePlatform();
+    if (!availablePlatform.isEmpty()) {
+        qCInfo(lcPlatformDetection) << "Using platform:" << availablePlatform;
+        setenv("QT_QPA_PLATFORM", availablePlatform.toUtf8().constData(), 0); // Don't override if already set
+    }
 
     MImServerCommonOptions serverCommonOptions;
     MImServerConnectionOptions connectionOptions;
