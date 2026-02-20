@@ -105,10 +105,18 @@ void DBusServerConnection::connectToDBusFailed(const QString &)
 
 void DBusServerConnection::onDisconnection()
 {
-    delete mProxy;
-    mProxy = 0;
+    // Disconnect signals first to prevent callbacks during deletion
     QDBusConnection::disconnectFromPeer(QString::fromLatin1(IMServerConnection));
+
+    // Emit disconnected signal before deletion to avoid use-after-free
+    // if any slots access mProxy
     Q_EMIT disconnected();
+
+    // Use deleteLater for safe cleanup - ensures pending events are processed
+    if (mProxy) {
+        mProxy->deleteLater();
+        mProxy = nullptr;
+    }
 
     if (mActive)
         QTimer::singleShot(ConnectionRetryInterval, this, SLOT(connectToDBus()));
