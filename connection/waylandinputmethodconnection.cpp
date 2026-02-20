@@ -276,6 +276,10 @@ WaylandInputMethodConnectionPrivate::WaylandInputMethodConnectionPrivate(Wayland
         return;
     }
     registry = wl_display_get_registry(display);
+    if (!registry) {
+        qCritical() << Q_FUNC_INFO << "Failed to get registry.";
+        return;
+    }
     wl_registry_add_listener(registry, &maliit_registry_listener, this);
 }
 
