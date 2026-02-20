@@ -91,9 +91,18 @@ DBusInputContextConnection::onDisconnection()
     unsigned int connectionNumber = mConnectionNumbers.take(name);
     ComMeegoInputmethodInputcontext1Interface *proxy = mProxys.take(connectionNumber);
     mConnections.remove(connectionNumber);
-    delete proxy;
+
+    // Call handleDisconnection before deleting proxy to avoid use-after-free
+    // if any slots triggered by the signal access the proxy
     handleDisconnection(connectionNumber);
+
+    // Disconnect signals before deletion to prevent any callbacks
     QDBusConnection::disconnectFromPeer(name);
+
+    // Delete proxy after all notifications are complete
+    if (proxy) {
+        proxy->deleteLater();
+    }
 }
 
 void
