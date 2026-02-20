@@ -330,7 +330,9 @@ void WaylandInputMethodConnection::sendPreeditString(const QString &string,
 
     qCDebug(lcWaylandConnection) << Q_FUNC_INFO << string << replace_start << replace_length << cursor_pos;
 
-    if (!d->context())
+    // Cache context pointer to avoid use-after-free if context is destroyed during processing
+    Maliit::Wayland::InputMethodContext *context = d->context();
+    if (!context)
         return;
 
     MInputContextConnection::sendPreeditString(string, preedit_formats,
@@ -341,7 +343,7 @@ void WaylandInputMethodConnection::sendPreeditString(const QString &string,
         int cursor = widgetState().value(CursorPositionAttribute).toInt();
         uint32_t index = string.midRef(qMin(cursor + replace_start, cursor), qAbs(replace_start)).toUtf8().size();
         uint32_t length = string.midRef(cursor + replace_start, replace_length).toUtf8().size();
-        d->context()->delete_surrounding_text(index, length);
+        context->delete_surrounding_text(index, length);
     }
 
     Q_FOREACH (const Maliit::PreeditTextFormat& format, preedit_formats) {
@@ -349,7 +351,7 @@ void WaylandInputMethodConnection::sendPreeditString(const QString &string,
         uint32_t index = string.leftRef(format.start).toUtf8().size();
         uint32_t length = string.leftRef(format.start + format.length).toUtf8().size() - index;
         qCDebug(lcWaylandConnection) << Q_FUNC_INFO << "preedit_styling" << index << length;
-        d->context()->preedit_styling(index, length, style);
+        context->preedit_styling(index, length, style);
     }
 
     // TODO check if defined like that/required
@@ -358,9 +360,9 @@ void WaylandInputMethodConnection::sendPreeditString(const QString &string,
     }
 
     qCDebug(lcWaylandConnection) << Q_FUNC_INFO << "preedit_cursor" << string.leftRef(cursor_pos).toUtf8().size();
-    d->context()->preedit_cursor(string.leftRef(cursor_pos).toUtf8().size());
+    context->preedit_cursor(string.leftRef(cursor_pos).toUtf8().size());
     qCDebug(lcWaylandConnection) << Q_FUNC_INFO << "preedit_string" << string;
-    d->context()->preedit_string(d->context()->serial(), string, string);
+    context->preedit_string(context->serial(), string, string);
 }
 
 
@@ -373,7 +375,9 @@ void WaylandInputMethodConnection::sendCommitString(const QString &string,
 
     qCDebug(lcWaylandConnection) << Q_FUNC_INFO << string << replace_start << replace_length << cursor_pos;
 
-    if (!d->context())
+    // Cache context pointer to avoid use-after-free if context is destroyed during processing
+    Maliit::Wayland::InputMethodContext *context = d->context();
+    if (!context)
         return;
 
     MInputContextConnection::sendCommitString(string, replace_start, replace_length, cursor_pos);
@@ -387,12 +391,12 @@ void WaylandInputMethodConnection::sendCommitString(const QString &string,
         int cursor = widgetState().value(CursorPositionAttribute).toInt();
         uint32_t index = string.midRef(qMin(cursor + replace_start, cursor), qAbs(replace_start)).toUtf8().size();
         uint32_t length = string.midRef(cursor + replace_start, replace_length).toUtf8().size();
-        d->context()->delete_surrounding_text(index, length);
+        context->delete_surrounding_text(index, length);
     }
 
     cursor_pos = string.leftRef(cursor_pos).toUtf8().size();
-    d->context()->cursor_position(cursor_pos, cursor_pos);
-    d->context()->commit_string(d->context()->serial(), string);
+    context->cursor_position(cursor_pos, cursor_pos);
+    context->commit_string(context->serial(), string);
 }
 
 void WaylandInputMethodConnection::sendKeyEvent(const QKeyEvent &keyEvent,
@@ -402,7 +406,9 @@ void WaylandInputMethodConnection::sendKeyEvent(const QKeyEvent &keyEvent,
 
     qCDebug(lcWaylandConnection) << Q_FUNC_INFO;
 
-    if (!d->context())
+    // Cache context pointer to avoid use-after-free if context is destroyed during processing
+    Maliit::Wayland::InputMethodContext *context = d->context();
+    if (!context)
         return;
 
     xkb_keysym_t sym(keyFromQt(keyEvent.key()));
@@ -432,9 +438,9 @@ void WaylandInputMethodConnection::sendKeyEvent(const QKeyEvent &keyEvent,
 
     MInputContextConnection::sendKeyEvent(keyEvent, requestType);
 
-    d->context()->keysym(d->context()->serial(),
-                         keyEvent.timestamp(),
-                         sym, state, modifiers);
+    context->keysym(context->serial(),
+                    keyEvent.timestamp(),
+                    sym, state, modifiers);
 }
 
 QString WaylandInputMethodConnection::selection(bool &valid)
