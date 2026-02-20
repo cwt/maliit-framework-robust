@@ -780,7 +780,10 @@ MIMPluginManagerPrivate::surroundingSubViewDescriptions(Maliit::HandlerState sta
     MImSubViewDescription current(pluginId, subViewId, *subViewIterator);
 
     const int index = enabledSubViews.indexOf(current);
-    Q_ASSERT(index >= 0);
+    if (index < 0 || enabledSubViews.isEmpty()) {
+        qCWarning(lcMaliitFw) << Q_FUNC_INFO << "Invalid subview index or empty list";
+        return result;
+    }
 
     const int prevIndex = index > 0 ? index - 1 : enabledSubViews.size() - 1;
     result.append(enabledSubViews.at(prevIndex));
