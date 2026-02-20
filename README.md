@@ -1,3 +1,25 @@
+Robust Maliit Framework with crash fixes
+=========================================
+
+This project is co‑authored by Qwen (mostly) and Gemini as the code reviewer.
+However, this is not *vibe coding* in any sense. Here is my workflow with the AIs:
+
+1. AI analyze existing code
+2. AI summarize its understanding
+3. I verify or correct that understanding
+4. I define the requirements or the bug
+5. AI implements the solution
+6. I get another AI (in this case Gemini) to review the changes, and I repeat this step back and forth several times
+7. Finally, I make the final decision
+
+However, if this AI‑assisted workflow isn't something you're comfortable with, you're welcome to skip it.
+
+---
+
+**Above is the ROBUST fork information. Below is the original README content:**
+
+---
+
 Maliit
 ======
 
