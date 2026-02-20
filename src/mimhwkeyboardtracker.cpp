@@ -23,8 +23,8 @@
 #include "mimhwkeyboardtracker.h"
 #include "mimhwkeyboardtracker_p.h"
 
-/* bit array ops */
-#define BITS2BYTES(x) ((((x) - 1) / 8) + 1)
+/* bit array ops - safer version that avoids underflow when x=0 */
+#define BITS2BYTES(x) (((x) + 7) / 8)
 #define TEST_BIT(bit, array) (array[(bit) / 8] & (1 << (bit) % 8))
 
 MImHwKeyboardTrackerPrivate::MImHwKeyboardTrackerPrivate(MImHwKeyboardTracker *q_ptr) :
